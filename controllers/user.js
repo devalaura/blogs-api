@@ -32,10 +32,32 @@ async function getUsers(_req, res, next) {
   try {
     const getAll = await service.getUsers(t);
 
+    await t.commit();
     return res.status(200).json(getAll);
   } catch (e) {
-    next(e);
+    await t.rollback();
+    return next(e);
   }
 }
 
-module.exports = { createUser, getUsers };
+async function getById(req, res, next) {
+  const t = await sequelize.transaction();
+
+  try {
+    const { id } = req.params;
+
+    const user = await service.getById(id, t);
+    if (!user) {
+      await t.rollback();
+      return res.status(404).json({ message: 'User does not exist' });
+    }
+
+    await t.commit();
+    return res.status(200).json(user);
+  } catch (e) {
+    await t.rollback();
+    return next(e);
+  }
+}
+
+module.exports = { createUser, getUsers, getById };

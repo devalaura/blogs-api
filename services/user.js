@@ -15,14 +15,14 @@ async function createUser({ displayName, email, password, image, t }) {
     const findExistingUser = await User.findOne({ where: { email } });
     if (findExistingUser) return { status: 409, message: { message: 'User already registered' } };
 
-    const d = await User.create({ displayName, email, password, image }, { transaction: t });
+    await User.create({ displayName, email, password, image }, { transaction: t });
 
     const jwtConfig = {
       expiresIn: '5d',
       algorithm: 'HS256',
     };
 
-    const token = jwt.sign({ data: d }, process.env.JWT_SECRET, jwtConfig);
+    const token = jwt.sign({ data: { email, password } }, process.env.JWT_SECRET, jwtConfig);
 
     return token;
   } catch (e) {
@@ -35,12 +35,20 @@ async function getUsers(t) {
     const getAll = await User.findAll({ attributes: { exclude: ['password'] } }, 
       { transaction: t });
 
-    await t.commit();
     return getAll;
   } catch (e) {
-    await t.rollback();
     return { status: 500, message: { message: e.message } };
   }
 }
 
-module.exports = { createUser, getUsers };
+async function getById(id, t) {
+  try {
+    const user = await User.findByPk(id, { transaction: t });
+
+    return user;
+  } catch (e) {
+    return { status: 500, message: { message: e.message } };
+  }
+}
+
+module.exports = { createUser, getUsers, getById };
