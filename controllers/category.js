@@ -31,4 +31,18 @@ async function create(req, res, next) {
   }
 }
 
-module.exports = { create };
+async function getAll(_req, res, next) {
+  const t = await sequelize.transaction();
+
+  try {
+    const categories = await service.getAll(t);
+
+    await t.commit();
+    return res.status(200).json(categories);
+  } catch (e) {
+    await t.rollback();
+    return next(e);
+  }
+}
+
+module.exports = { create, getAll };

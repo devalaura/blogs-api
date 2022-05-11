@@ -6,8 +6,18 @@ async function create(name, t) {
 
     return newCategory;
   } catch (e) {
-    return { status: 500, message: e.message };
+    return { status: 500, message: { message: e.message } };
   }
 }
 
-module.exports = { create };
+async function getAll(t) {
+  try {
+    const findAll = await Category.findAll({}, { transaction: t });
+
+    return findAll;
+  } catch (e) {
+    return { status: 500, message: { message: e.message } };
+  }
+}
+
+module.exports = { create, getAll };
