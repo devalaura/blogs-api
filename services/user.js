@@ -30,4 +30,17 @@ async function createUser({ displayName, email, password, image, t }) {
   }
 }
 
-module.exports = { createUser };
+async function getUsers(t) {
+  try {
+    const getAll = await User.findAll({ attributes: { exclude: ['password'] } }, 
+      { transaction: t });
+
+    await t.commit();
+    return getAll;
+  } catch (e) {
+    await t.rollback();
+    return { status: 500, message: { message: e.message } };
+  }
+}
+
+module.exports = { createUser, getUsers };

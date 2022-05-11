@@ -26,4 +26,16 @@ async function createUser(req, res, next) {
   }
 }
 
-module.exports = { createUser };
+async function getUsers(_req, res, next) {
+  const t = await sequelize.transaction();
+
+  try {
+    const getAll = await service.getUsers(t);
+
+    return res.status(200).json(getAll);
+  } catch (e) {
+    next(e);
+  }
+}
+
+module.exports = { createUser, getUsers };
