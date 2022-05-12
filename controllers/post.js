@@ -90,4 +90,26 @@ async function update(req, res, next) {
   }
 }
 
-module.exports = { create, getAll, getById, update };
+async function destroy(req, res, next) {
+  const t = await sequelize.transaction();
+
+  try {
+    const { id } = req.params;
+    const { user } = req;
+
+    const destroyPost = await service.destroy(id, user, t);
+
+    if (!destroyPost) {
+      await t.commit();
+      return res.status(204).end();
+    }
+
+    await t.rollback();
+    return res.status(destroyPost.status).json(destroyPost.message);
+  } catch (e) {
+    await t.rollback();
+    return next(e);
+  }
+}
+
+module.exports = { create, getAll, getById, update, destroy };

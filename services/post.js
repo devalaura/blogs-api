@@ -81,4 +81,20 @@ async function update({ id, title, content, categoryIds, user, t }) {
   }
 }
 
-module.exports = { create, getAll, getById, update };
+async function destroy(id, user, t) {
+  try {
+    const findPost = await BlogPost.findByPk(id, { transaction: t });
+    if (!findPost) return { status: 404, message: { message: 'Post does not exist' } };
+    if (findPost.userId !== user.id) { 
+      return { status: 401, message: { message: 'Unauthorized user' } };
+    }
+
+    await BlogPost.destroy({ where: { id } }, { transaction: t });
+    
+    return;
+  } catch (e) {
+    return { status: 500, message: { message: e.message } };
+  }
+}
+
+module.exports = { create, getAll, getById, update, destroy };
