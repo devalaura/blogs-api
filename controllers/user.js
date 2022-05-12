@@ -60,4 +60,24 @@ async function getById(req, res, next) {
   }
 }
 
-module.exports = { createUser, getUsers, getById };
+async function destroy(req, res, next) {
+  const t = await sequelize.transaction();
+
+  try {
+    const { user } = req;
+
+    const destroyUser = await service.destroy(user, t);
+    if (!destroyUser) {
+      await t.commit();
+      return res.status(204).end();
+    }
+    
+    await t.rollback();
+    return res.status(destroyUser.status).json(destroyUser.message);
+  } catch (e) {
+    await t.rollback();
+    return next(e);
+  }
+}
+
+module.exports = { createUser, getUsers, getById, destroy };

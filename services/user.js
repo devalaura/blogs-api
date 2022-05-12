@@ -51,4 +51,14 @@ async function getById(id, t) {
   }
 }
 
-module.exports = { createUser, getUsers, getById };
+async function destroy(user, t) {
+  try {
+    await User.destroy({ where: { id: user.dataValues.id } }, { transaction: t });
+    
+    return;
+  } catch (e) {
+    return { status: 500, message: { message: e.message } };
+  }
+}
+
+module.exports = { createUser, getUsers, getById, destroy };
