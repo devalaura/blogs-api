@@ -12,8 +12,10 @@ module.exports = async function authentication(req, res, next) {
   try {
     const decoded = jwt.verify(token, SECRET);
     
-    const user = await User.findOne({ where: { email: decoded.data.email } });
-
+    const user = await User.findOne({ where: 
+      { email: decoded.data.email, password: decoded.data.password } });
+    if (!user) return res.status(400).json({ message: 'Invalid fields' });
+    
     req.user = user;
     return next();
   } catch (e) {
