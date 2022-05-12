@@ -34,8 +34,7 @@ async function getAll(t) {
     const posts = await BlogPost.findAll({ include: [
       { model: User, as: 'user' },
       { model: Category, as: 'categories', through: { attributes: [] } },
-    ] },
-      { transaction: t });
+    ] }, { transaction: t });
     
     return posts;
   } catch (e) {
@@ -43,4 +42,18 @@ async function getAll(t) {
   }
 }
 
-module.exports = { create, getAll };
+async function getById(id, t) {
+  try {
+    const post = await BlogPost.findByPk(id, { include: [
+      { model: User, as: 'user' },
+      { model: Category, as: 'categories', through: { attributes: [] } },
+    ] }, { transaction: t });
+
+    if (!post) return { status: 404, message: { message: 'Post does not exist' } };
+    return post;
+  } catch (e) {
+    return { status: 500, message: { message: e.message } };
+  }
+}
+
+module.exports = { create, getAll, getById };

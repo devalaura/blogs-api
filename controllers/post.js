@@ -46,4 +46,25 @@ async function getAll(req, res, next) {
   }
 }
 
-module.exports = { create, getAll };
+async function getById(req, res, next) {
+  const t = await sequelize.transaction();
+
+  try {
+    const { id } = req.params;
+
+    const post = await service.getById(id, t);
+
+    if (post.status) {
+      await t.rollback();
+      return res.status(post.status).json(post.message);
+    }
+
+    await t.commit();
+    return res.status(200).json(post);
+  } catch (e) {
+    await t.rollback();
+    return next(e);
+  }
+}
+
+module.exports = { create, getAll, getById };
