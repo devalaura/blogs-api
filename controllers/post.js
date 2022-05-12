@@ -67,4 +67,27 @@ async function getById(req, res, next) {
   }
 }
 
-module.exports = { create, getAll, getById };
+async function update(req, res, next) {
+  const t = await sequelize.transaction();
+
+  try {
+    const { id } = req.params;
+    const { title, content, categoryIds = undefined } = req.body;
+    const { user } = req;
+
+    const postUpdated = await service.update({ id, title, content, categoryIds, user, t });
+
+    if (postUpdated.status) {
+      await t.rollback();
+      return res.status(postUpdated.status).json(postUpdated.message);
+    }
+
+    await t.commit();
+    return res.status(200).json(postUpdated);
+  } catch (e) {
+    await t.rollback();
+    return next(e);
+  }
+}
+
+module.exports = { create, getAll, getById, update };

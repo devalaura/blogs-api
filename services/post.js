@@ -1,11 +1,11 @@
 const { User, BlogPost, Category, PostCategory } = require('../models');
-const validatePost = require('../middlewares/post');
+const { validateCreate, validateUpdate } = require('../middlewares/post');
 
 const DATE = Date.now();
 
 async function create({ title, content, categoryIds, user, t }) {
   try {
-    const invalidPost = validatePost(title, content, categoryIds);
+    const invalidPost = validateCreate(title, content, categoryIds);
     if (invalidPost.status) return invalidPost;
     
     const findCategories = await Category.findAll({ where: { id: [...categoryIds] } },
@@ -56,4 +56,29 @@ async function getById(id, t) {
   }
 }
 
-module.exports = { create, getAll, getById };
+async function update({ id, title, content, categoryIds, user, t }) {
+  try {
+    const validData = validateUpdate(title, content, categoryIds);
+    if (validData.status) return validData;
+
+    const post = await BlogPost.findByPk(id, { include: [
+      { model: Category, as: 'categories', through: { attributes: [] } },
+    ] }, { transaction: t });
+    if (!post) return { status: 404, message: { message: 'Post does not exist' } };
+    if (post.userId !== user.id) return { status: 401, message: { message: 'Unauthorized user' } };
+
+    const updated = new Date(DATE);
+
+    await BlogPost.update({ title, content, updated }, { transaction: t, where: { id } });
+
+    post.title = title;
+    post.content = content;
+    post.updated = updated;
+
+    return post;
+  } catch (e) {
+    return { status: 500, message: { message: e.message } };
+  }
+}
+
+module.exports = { create, getAll, getById, update };
