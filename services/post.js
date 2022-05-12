@@ -1,4 +1,4 @@
-const { BlogPost, Category, PostCategory } = require('../models');
+const { User, BlogPost, Category, PostCategory } = require('../models');
 const validatePost = require('../middlewares/post');
 
 const DATE = Date.now();
@@ -29,4 +29,18 @@ async function create({ title, content, categoryIds, user, t }) {
   }
 }
 
-module.exports = { create };
+async function getAll(t) {
+  try {
+    const posts = await BlogPost.findAll({ include: [
+      { model: User, as: 'user' },
+      { model: Category, as: 'categories', through: { attributes: [] } },
+    ] },
+      { transaction: t });
+    
+    return posts;
+  } catch (e) {
+    return { status: 500, message: { message: e.message } };
+  }
+}
+
+module.exports = { create, getAll };
